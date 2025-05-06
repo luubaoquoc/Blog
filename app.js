@@ -1,8 +1,12 @@
 const express = require("express");
 require("dotenv").config();
 const expressLayout = require("express-ejs-layouts");
+const cookieParser = require('cookie-parser');
+const MongoStore = require('connect-mongo');
 const main = require('./server/routes/main');
-const connectDB = require('./server/config/db')
+const admin = require('./server/routes/admin');
+const connectDB = require('./server/config/db');
+const session = require("express-session");
 
 const app = express();
 const PORT = 3000 || process.env.PORT;
@@ -11,6 +15,18 @@ connectDB();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cookieParser());
+
+
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URL
+    })
+}))
+
 app.use(express.static('public'));
 
 
@@ -21,6 +37,7 @@ app.set('view engine', 'ejs')
 
 
 app.use('/', main);
+app.use('/', admin);
 
 app.listen(PORT, () => {
     console.log(`App listening at http://localhost:${PORT} `)
